@@ -3,26 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreScrapeRequest;
-use Illuminate\Http\Request;
-use Symfony\Component\CssSelector\CssSelectorConverter;
+use App\Http\Resources\ScrapeJobResource;
+use App\Jobs\ScrapeUrls;
+use App\Models\Job;
+use Illuminate\Bus\Dispatcher;
+use Illuminate\Http\Response;
 
 class ScrapeJobController extends Controller
 {
-    public function show(Request $request)
+    /**
+     * Gets job details from database
+     *
+     * @param string $id
+     * @return ScrapeJobResource
+     */
+    public function show(string $id) : ScrapeJobResource
     {
-        //TODO: Get job or status
-        abort(404);
+        $job = Job::find($id);
+
+        if(!$job)
+            abort(response([
+                'status' => 404, 'message' => 'Job not found.'
+            ], 404));
+
+        return ScrapeJobResource::make($job);
     }
 
-    public function store(StoreScrapeRequest $request)
+    /**
+     * Creates and dispatches a new web scrape job
+     *
+     * @param StoreScrapeRequest $request
+     * @return ScrapeJobResource
+     */
+    public function store(StoreScrapeRequest $request) : ScrapeJobResource
     {
-        //TODO: Dispatch job
-        dd('yeah');
-        return response($request->all());
+        $jobId = app(Dispatcher::class)
+            ->dispatch(new ScrapeUrls(
+                urls: $request->input('urls'),
+                selectors: $request->input('selectors')
+            ));
+
+        $job = new Job([
+            'id' => $jobId,
+            'status' => 'queued',
+            'urls' => $request->input('urls'),
+            'selectors' => $request->input('selectors')
+        ]);
+
+        $job->save();
+
+        return ScrapeJobResource::make($job);
     }
 
-    public function destroy(Request $request)
+    /**
+     * Deletes job from database
+     *
+     * @param string $id
+     * @return Response
+     */
+    public function destroy(string $id) : Response
     {
-        //TODO: Delete job
+        $job = Job::find($id);
+
+        if(!$job)
+            abort(response([
+                'status' => 404, 'message' => 'Job not found.'
+            ], 404));
+
+        $job->delete();
+
+        return response([
+            'status'    => 200,
+            'message'   => 'Job has been deleted.'
+        ]);
     }
 }

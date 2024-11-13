@@ -12,7 +12,10 @@ class ScrapeUrls implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct(
+        private readonly array $urls,
+        private readonly array $selectors
+    )
     {
         //
     }
@@ -22,6 +25,7 @@ class ScrapeUrls implements ShouldQueue
      */
     public function handle(): void
     {
-        //
+        $this->job->getJobId();
+        return;
     }
 }
