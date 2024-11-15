@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreScrapeRequest;
-use App\Http\Resources\ScrapeJobResource;
+use App\Http\Resources\ScrapeTaskResource;
 use App\Jobs\ScrapeUrls;
-use App\Models\Job;
-use Illuminate\Bus\Dispatcher;
+use App\Models\Task;
 use Illuminate\Http\Response;
 
 class ScrapeJobController extends Controller
@@ -15,44 +14,43 @@ class ScrapeJobController extends Controller
      * Gets job details from database
      *
      * @param string $id
-     * @return ScrapeJobResource
+     * @return ScrapeTaskResource
      */
-    public function show(string $id) : ScrapeJobResource
+    public function show(string $id) : ScrapeTaskResource
     {
-        $job = Job::find($id);
+        $task = Task::find($id);
 
-        if(!$job)
+        if(!$task)
             abort(response([
                 'status' => 404, 'message' => 'Job not found.'
             ], 404));
 
-        return ScrapeJobResource::make($job);
+        return ScrapeTaskResource::make($task);
     }
 
     /**
      * Creates and dispatches a new web scrape job
      *
      * @param StoreScrapeRequest $request
-     * @return ScrapeJobResource
+     * @return ScrapeTaskResource
      */
-    public function store(StoreScrapeRequest $request) : ScrapeJobResource
+    public function store(StoreScrapeRequest $request) : ScrapeTaskResource
     {
-        $jobId = app(Dispatcher::class)
-            ->dispatch(new ScrapeUrls(
-                urls: $request->input('urls'),
-                selectors: $request->input('selectors')
-            ));
-
-        $job = new Job([
-            'id' => $jobId,
-            'status' => 'queued',
-            'urls' => $request->input('urls'),
+        $task = new Task([
+            'status'    => 'queued',
+            'urls'      => $request->input('urls'),
             'selectors' => $request->input('selectors')
         ]);
 
-        $job->save();
+        $task->save();
 
-        return ScrapeJobResource::make($job);
+        dispatch(new ScrapeUrls(
+            task: $task,
+            urls: $request->input('urls'),
+            selectors: $request->input('selectors')
+        ));
+
+        return ScrapeTaskResource::make($task);
     }
 
     /**
@@ -63,14 +61,15 @@ class ScrapeJobController extends Controller
      */
     public function destroy(string $id) : Response
     {
-        $job = Job::find($id);
+        $task = Task::find($id);
 
-        if(!$job)
+        if(!$task)
             abort(response([
                 'status' => 404, 'message' => 'Job not found.'
             ], 404));
 
-        $job->delete();
+
+        $task->delete();
 
         return response([
             'status'    => 200,

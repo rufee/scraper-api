@@ -1,66 +1,168 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel based URL scraping API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Scrapes a list of URLs according to specified CSS selectors
 
-## About Laravel
+## Installation (Manual)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. **Clone the repository and install dependencies:**
+   ```bash
+   composer install
+   ```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+2. **Host the application** using your preferred server or quickly test with:
+   ```bash
+   php artisan serve
+   ```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+3. **Run the queue worker** (if `QUEUE_DRIVER` is set to something other than `sync`):
+   ```bash
+   php artisan queue:work
+   ```
 
-## Learning Laravel
+## Usage
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Endpoints
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. **Create a New Scrape Job**
+    - **Method**: `POST`
+    - **Endpoint**: `/api/jobs`
+    - **Description**: Queues a new scrape job for processing.
+    - **Request Body** (JSON):
+        - `urls` (array) **required**: URLs to scrape.
+        - `selectors` (array) **required**: CSS selectors to filter the results.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+2. **Retrieve a Job by ID**
+    - **Method**: `GET`
+    - **Endpoint**: `/api/jobs/{id}`
+    - **Description**: Retrieves the details of a scrape job by its ID.
+    - **Results**: Text values for matched selectors are returned for each URL along with HTTP status at scrape time. If a selector was not matched no result is returned for that selector.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Premium Partners
+3. **Delete a Job by ID**
+    - **Method**: `DELETE`
+    - **Endpoint**: `/api/jobs/{id}`
+    - **Description**: Deletes the specified scrape job.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Examples
 
-## Contributing
+### 1. **Create a Scrape Job**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**Request**:
+- **POST** `/api/jobs`
+- **Body**:
+   ```json
+   {
+       "urls": [
+           "https://example.com",
+           "https://my-domain.tech"
+       ],
+       "selectors": [
+           "title",
+           "h1"
+       ]
+   }
+   ```
 
-## Code of Conduct
+**Response (Success)**:
+```json
+{
+    "id": "01JCRSRA99D1S5SSGFX5V82D7X",
+    "status": "queued",
+    "urls": [
+        "https://example.com",
+        "https://my-domain.tech"
+    ],
+    "selectors": [
+        "title",
+        "h1"
+    ],
+    "results": []
+}
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Response (Invalid selector)**:
 
-## Security Vulnerabilities
+```json
+{
+    "message": "Attribute selectors.0 must be a valid CSS selector",
+    "errors": {
+        "selectors.0": [
+            "Attribute selectors.0 must be a valid CSS selector"
+        ]
+    }
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. **Retrieve a Job by ID**
 
-## License
+**Request**:
+- **GET** `/api/jobs/01JCRSRA99D1S5SSGFX5V82D7X`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**Response (Success)**:
+```json
+{
+    "id": "01JCRSTM12460PC3BZ03P2S3D3",
+    "status": "complete",
+    "urls": [
+        "https://example.com",
+        "https://my-domain.tech"
+    ],
+    "selectors": [
+        "title",
+        "h1"
+    ],
+    "results": [
+        {
+            "url": "https://example.com",
+            "http_status": 200,
+            "data": [
+                {
+                    "selector": "title",
+                    "text": "Example website"
+                },
+                {
+                    "selector": "h1",
+                    "text": "Heading 1"
+                }
+            ]
+        },
+        {
+            "url": "https://my-domain.tech",
+            "http_status": 404,
+            "data": []
+        }
+    ]
+}
+```
+
+**Response (Not found)**:
+
+```json
+{
+    "status": 404,
+    "message": "Job not found."
+}
+```
+
+### 3. **Delete a Job by ID**
+
+**Request**:
+- **DELETE** `/api/jobs/01JCRSRA99D1S5SSGFX5V82D7X`
+
+**Response (Success)**:
+```json
+{
+    "status": 200,
+    "message": "Job has been deleted."
+}
+```
+
+**Response (Not found)**:
+
+```json
+{
+    "status": 404,
+    "message": "Job not found."
+}
+```

@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ScrapeJobResource extends JsonResource
+class ScrapeTaskResource extends JsonResource
 {
     public static $wrap = null;
     /**
@@ -20,7 +20,7 @@ class ScrapeJobResource extends JsonResource
             'status'    => $this->status,
             'urls'      => $this->urls,
             'selectors' => $this->selectors,
-            'results'   => $this->results
+            'results'   => is_null($this->results) ? [] : $this->results,
         ];
     }
 }

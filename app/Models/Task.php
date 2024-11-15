@@ -5,21 +5,21 @@ namespace App\Models;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
-class Job
+class Task
 {
     /**
      * Object's id
      *
      * @var mixed|string
      */
-    protected mixed $id;
+    public mixed $id;
 
     /**
      * Prefix for Redis key store
      *
      * @var string
      */
-    protected string $prefix = 'job';
+    protected string $prefix = 'task';
 
     /**
      * Object's attributes
@@ -34,7 +34,7 @@ class Job
     public function __construct(array $attributes = [])
     {
         $this->attributes = $attributes;
-        $this->id = $attributes['id'] ?? Str::random(32);
+        $this->id = $attributes['id'] ?? Str::ulid();
     }
 
     /**
