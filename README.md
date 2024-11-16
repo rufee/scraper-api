@@ -2,6 +2,14 @@
 
 Scrapes a list of URLs according to specified CSS selectors
 
+## Installation (Docker)
+
+By default the app will be available on port 8080
+
+```bash
+docker compose up --build
+```
+
 ## Installation (Manual)
 
 1. **Clone the repository and install dependencies:**
