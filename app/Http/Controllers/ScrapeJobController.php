@@ -44,11 +44,7 @@ class ScrapeJobController extends Controller
 
         $task->save();
 
-        dispatch(new ScrapeUrls(
-            task: $task,
-            urls: $request->input('urls'),
-            selectors: $request->input('selectors')
-        ));
+        dispatch(new ScrapeUrls(task: $task));
 
         return ScrapeTaskResource::make($task);
     }

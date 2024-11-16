@@ -69,7 +69,8 @@ class Task
      */
     public function delete(): void
     {
-        Redis::del($this->getKey());
+        $return = Redis::del($this->getKey());
+        //dd($return);
     }
 
     /**
@@ -103,5 +104,15 @@ class Task
     protected function getKey(): string
     {
         return $this->prefix . ':' . $this->id;
+    }
+
+    /**
+     * Returns Redis key prefix
+     *
+     * @return string
+     */
+    public function getPrefix(): string
+    {
+        return $this->prefix;
     }
 }

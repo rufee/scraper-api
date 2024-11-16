@@ -16,9 +16,7 @@ class ScrapeUrls implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        private Task $task,
-        private readonly array $urls,
-        private readonly array $selectors
+        private Task $task
     )
     {
         //
@@ -34,7 +32,7 @@ class ScrapeUrls implements ShouldQueue
         $this->task->status  = 'running';
         $this->task->save();
 
-        foreach($this->urls as $url)
+        foreach($this->task->urls as $url)
         {
             $response = Http::get($url);
 
@@ -50,7 +48,7 @@ class ScrapeUrls implements ShouldQueue
 
             $crawler = new Crawler($response->body());
             $scrapedData = [];
-            foreach($this->selectors as $selector)
+            foreach($this->task->selectors as $selector)
                 $crawler->filter($selector)->each(function (Crawler $node) use (&$scrapedData, $selector){
                     $scrapedData[] = [
                         'selector'  => $selector,

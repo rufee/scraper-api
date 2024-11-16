@@ -8,13 +8,19 @@ Scrapes a list of URLs according to specified CSS selectors
    ```bash
    composer install
    ```
+   
+2. **Setup the environment**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-2. **Host the application** using your preferred server or quickly test with:
+3. **Host the application** using your preferred server or quickly test with:
    ```bash
    php artisan serve
    ```
 
-3. **Run the queue worker** (if `QUEUE_DRIVER` is set to something other than `sync`):
+4. **Run the queue worker** (if `QUEUE_DRIVER` is set to something other than `sync`):
    ```bash
    php artisan queue:work
    ```
